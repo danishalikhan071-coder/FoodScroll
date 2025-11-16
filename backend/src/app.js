@@ -11,20 +11,35 @@ const cors = require('cors')
 
 app.use(cors({ // BE ko FE server se data sharing krne ke liye
     origin: (origin, callback) => {
-        const allowedOrigins = [
-            process.env.CLIENT_URL || "http://localhost:5173",
-            "https://foodscroll.vercel.app",
-            "http://localhost:5173"
+        // Get allowed origins from environment variable (can be comma-separated)
+        const envOrigins = process.env.CLIENT_URL 
+            ? process.env.CLIENT_URL.split(',').map(url => url.trim())
+            : [];
+        
+        // Default allowed origins for development
+        const defaultOrigins = [
+            "http://localhost:5173",
+            "http://localhost:3000",
+            "http://127.0.0.1:5173"
         ];
         
-        // Normalize origins (remove trailing slashes for comparison)
-        const normalizeOrigin = (url) => url ? url.replace(/\/$/, '') : url;
+        // Combine environment and default origins
+        const allowedOrigins = [...envOrigins, ...defaultOrigins];
+        
+        // Normalize origins (remove trailing slashes and protocol variations for comparison)
+        const normalizeOrigin = (url) => {
+            if (!url) return url;
+            return url.replace(/\/$/, '').toLowerCase();
+        };
+        
         const normalizedOrigin = normalizeOrigin(origin);
         
+        // Check if origin is allowed
         const isAllowed = allowedOrigins.some(allowed => 
             normalizeOrigin(allowed) === normalizedOrigin
         );
         
+        // Allow requests with no origin (like mobile apps or Postman)
         if (isAllowed || !origin) {
             callback(null, true);
         } else {
