@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import API_URL from '../../config/api';
 import '../../styles/reels.css'
 import ReelFeed from '../../components/ReelFeed'
 
@@ -10,7 +11,7 @@ const Home = () => {
     // Autoplay behavior is handled inside ReelFeed
 
     useEffect(() => {
-        axios.get("http://localhost:3000/api/food", { withCredentials: true })
+        axios.get(`${API_URL}/api/food`, { withCredentials: true })
             .then(response => {
                 setVideos(response.data.foodItems)
             })
@@ -26,7 +27,7 @@ const Home = () => {
 
     async function likeVideo(item) {
         try {
-            const response = await axios.post("http://localhost:3000/api/food/like", { foodId: item._id }, {withCredentials: true})
+            const response = await axios.post(`${API_URL}/api/food/like`, { foodId: item._id }, {withCredentials: true})
 
             if(response.data.like){
                 setVideos((prev) => prev.map((v) => v._id === item._id ? { ...v, likeCount: v.likeCount + 1 } : v))
@@ -42,7 +43,7 @@ const Home = () => {
 
     async function saveVideo(item) {
         try {
-            const response = await axios.post("http://localhost:3000/api/food/save", { foodId: item._id }, { withCredentials: true })
+            const response = await axios.post(`${API_URL}/api/food/save`, { foodId: item._id }, { withCredentials: true })
             
             if(response.data.save){
                 setVideos((prev) => prev.map((v) => v._id === item._id ? { ...v, savesCount: v.savesCount + 1 } : v))

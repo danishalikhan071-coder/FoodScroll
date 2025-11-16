@@ -1,6 +1,7 @@
 import React from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import API_URL from '../config/api';
 import '../styles/bottom-nav.css'
 
 const BottomNav = () => {
@@ -9,12 +10,12 @@ const BottomNav = () => {
   const handleLogout = async () => {
     try {
       // Try user logout first (since home page is for users)
-      await axios.get('http://localhost:3000/api/auth/user/logout', { withCredentials: true })
+      await axios.get(`${API_URL}/api/auth/user/logout`, { withCredentials: true })
       navigate('/user/login')
     } catch (error) {
       // If user logout fails, try food-partner logout
       try {
-        await axios.get('http://localhost:3000/api/auth/food-partner/logout', { withCredentials: true })
+        await axios.get(`${API_URL}/api/auth/food-partner/logout`, { withCredentials: true })
         navigate('/food-partner/login')
       } catch (partnerError) {
         // If both fail, still redirect to login

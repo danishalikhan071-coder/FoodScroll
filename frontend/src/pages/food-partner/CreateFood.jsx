@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import '../../styles/create-food.css';
 import { useNavigate } from 'react-router-dom';
+import API_URL from '../../config/api';
 
 const CreateFood = () => {
     const [ name, setName ] = useState('');
@@ -16,7 +17,7 @@ const CreateFood = () => {
 
     const handleLogout = async () => {
         try {
-            await axios.get('http://localhost:3000/api/auth/food-partner/logout', { withCredentials: true })
+            await axios.get(`${API_URL}/api/auth/food-partner/logout`, { withCredentials: true })
             navigate('/food-partner/login')
         } catch (error) {
             // Even if logout fails, redirect to login
@@ -68,7 +69,7 @@ const CreateFood = () => {
         formData.append("video", videoFile);
 
         try {
-            const response = await axios.post("http://localhost:3000/api/food", formData, {
+            const response = await axios.post(`${API_URL}/api/food`, formData, {
                 withCredentials: true,
             })
 

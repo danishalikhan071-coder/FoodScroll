@@ -6,11 +6,8 @@ const connectDB = require('./src/db/db')
 
 connectDB();
 
-app.use(cors({
-    origin: process.env.CLIENT_URL,
-    credentials: true
-}));
+const PORT = process.env.PORT || 3000;
 
-app.listen(3000, ()=>{
-    console.log("server started")
+app.listen(PORT, ()=>{
+    console.log(`server started on port ${PORT}`)
 })

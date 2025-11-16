@@ -10,7 +10,7 @@ const cors = require('cors')
 
 
 app.use(cors({ // BE ko FE server se data sharing krne ke liye
-    origin: "http://localhost:5173",
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
     credentials: true
 }))
 app.use(express.json())

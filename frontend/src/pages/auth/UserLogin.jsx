@@ -2,6 +2,7 @@ import React from 'react';
 import '../../styles/auth-shared.css';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import API_URL from '../../config/api';
 
 const UserLogin = () => {
 
@@ -12,7 +13,7 @@ const UserLogin = () => {
     const email = e.target.email.value
     const password = e.target.password.value
 
-    const response = await axios.post("http://localhost:3000/api/auth/user/login",{email,password},{withCredentials: true})
+    const response = await axios.post(`${API_URL}/api/auth/user/login`,{email,password},{withCredentials: true})
 
 
     navigate('/')
