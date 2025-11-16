@@ -4,34 +4,68 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 
 async function registerUser(req , res) {
-    const {fullName,email,password} = req.body;
+    try {
+        const {fullName,email,password} = req.body;
 
-    const isUserAlreadyExists = await userModel.findOne({email})
-    
-    if(isUserAlreadyExists){
-        return res.status(400).json({
-            message: "User already exists"
+        // Validate required fields
+        if(!fullName || !email || !password){
+            return res.status(400).json({
+                message: "Please provide all required fields (fullName, email, password)"
+            })
+        }
+
+        // Validate password length
+        if(password.length < 6){
+            return res.status(400).json({
+                message: "Password must be at least 6 characters long"
+            })
+        }
+
+        const isUserAlreadyExists = await userModel.findOne({email})
+        
+        if(isUserAlreadyExists){
+            return res.status(400).json({
+                message: "User already exists"
+            })
+        }
+        
+        const hashedPassword = await bcrypt.hash(password, 10)
+        const user = await userModel.create({
+            fullName,
+            email,
+            password: hashedPassword,
+        })
+        
+        if(!process.env.JWT_SECRET){
+            return res.status(500).json({
+                message: "Server configuration error"
+            })
+        }
+        
+        const token = jwt.sign({
+            id: user._id,
+        }, process.env.JWT_SECRET)
+        
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'none'
+        })
+        
+        res.status(201).json({
+            message: "User registered successfully",
+            user: {
+                _id: user._id,
+                email: user.email,
+                fullName: user.fullName
+            }
+        })
+    } catch (error) {
+        console.error('Registration error:', error)
+        res.status(500).json({
+            message: error.message || "An error occurred during registration. Please try again."
         })
     }
-    const hashedPassword =await bcrypt.hash(password, 10)
-    const user = await userModel.create({
-        fullName,
-        email,
-        password: hashedPassword,
-    })
-    const token = jwt.sign({
-        id: user._id,
-    }, process.env.JWT_SECRET)
-    res.cookie("token", token)
-    res.status(201).json({
-        message: "User registered successfully",
-        user: {
-            _id: user._id,
-            email: user.email,
-            fullName: user.fullName
-        }
-    })
-
 }
 async function loginUser(req , res) {
     const {email, password} = req.body;
