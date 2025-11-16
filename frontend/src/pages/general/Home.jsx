@@ -13,11 +13,13 @@ const Home = () => {
     useEffect(() => {
         axios.get(`${API_URL}/api/food`, { withCredentials: true })
             .then(response => {
-                setVideos(response.data.foodItems)
+                setVideos(response.data.foodItems || [])
             })
             .catch((error) => {
-                if (error.response?.status === 401) {
-                    // User is not authenticated, redirect to login
+                console.error('Error fetching food items:', error)
+                // Redirect to login for 401 (unauthorized) or network/CORS errors
+                if (error.response?.status === 401 || !error.response || error.code === 'ERR_NETWORK' || error.code === 'ERR_CORS') {
+                    // User is not authenticated or API is not reachable, redirect to login
                     navigate('/user/login')
                 }
             })
