@@ -49,7 +49,7 @@ async function registerUser(req , res) {
         res.cookie("token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'none'
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
         })
         
         res.status(201).json({
@@ -90,7 +90,11 @@ async function loginUser(req , res) {
     const token = jwt.sign({
         id: user._id,
     }, process.env.JWT_SECRET)
-    res.cookie("token", token)
+    res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    })
     res.status(200).json({
         message: "User logged in successfully",
         user: {
@@ -128,7 +132,11 @@ async function registerFoodPartner(req , res) {
     const token = jwt.sign({
         id: foodPartner._id
     }, process.env.JWT_SECRET)
-    res.cookie("token", token)
+    res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    })
     res.status(201).json({
         message: "Food partner registered successfully",
         foodPartner: {
@@ -161,7 +169,11 @@ async function loginFoodPartner(req , res) {
     const token = jwt.sign({
         _id: foodPartner._id
     },process.env.JWT_SECRET)
-    res.cookie("token", token)
+    res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    })
     res.status(200).json({
         message: "Food partner loggedIn successfully",
         foodPartner: {
