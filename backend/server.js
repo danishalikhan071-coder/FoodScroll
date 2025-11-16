@@ -6,6 +6,11 @@ const connectDB = require('./src/db/db')
 
 connectDB();
 
+app.use(cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true
+}));
+
 app.listen(3000, ()=>{
     console.log("server started")
 })
