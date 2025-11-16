@@ -14,7 +14,6 @@ const UserLogin = () => {
 
     const response = await axios.post("http://localhost:3000/api/auth/user/login",{email,password},{withCredentials: true})
 
-    console.log(response.data)
 
     navigate('/')
   }
