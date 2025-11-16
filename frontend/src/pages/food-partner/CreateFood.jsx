@@ -9,9 +9,20 @@ const CreateFood = () => {
     const [ videoFile, setVideoFile ] = useState(null);
     const [ videoURL, setVideoURL ] = useState('');
     const [ fileError, setFileError ] = useState('');
+    const [ successMessage, setSuccessMessage ] = useState('');
     const fileInputRef = useRef(null);
 
     const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        try {
+            await axios.get('http://localhost:3000/api/auth/food-partner/logout', { withCredentials: true })
+            navigate('/food-partner/login')
+        } catch (error) {
+            // Even if logout fails, redirect to login
+            navigate('/food-partner/login')
+        }
+    };
 
     useEffect(() => {
         if (!videoFile) {
@@ -56,14 +67,31 @@ const CreateFood = () => {
         formData.append('description', description);
         formData.append("video", videoFile);
 
-        const response = await axios.post("http://localhost:3000/api/food", formData, {
-            withCredentials: true,
-        })
+        try {
+            const response = await axios.post("http://localhost:3000/api/food", formData, {
+                withCredentials: true,
+            })
 
-        console.log(response.data);
-        navigate("/"); // Redirect to home or another page after successful creation
-        // Optionally reset
-        // setName(''); setDescription(''); setVideoFile(null);
+            
+            // Reset form after successful creation
+            setName('');
+            setDescription('');
+            setVideoFile(null);
+            setFileError('');
+            setSuccessMessage('Food item created successfully!');
+            
+            // Clear success message after 3 seconds
+            setTimeout(() => setSuccessMessage(''), 3000);
+        } catch (error) {
+            console.error('Error creating food:', error);
+            if (error.response?.status === 401) {
+                // If unauthorized, redirect to login
+                navigate('/food-partner/login');
+            } else {
+                // Show error message
+                setFileError(error.response?.data?.message || 'Failed to create food item. Please try again.');
+            }
+        }
     };
 
     const isDisabled = useMemo(() => !name.trim() || !videoFile, [ name, videoFile ]);
@@ -72,9 +100,32 @@ const CreateFood = () => {
         <div className="create-food-page">
             <div className="create-food-card">
                 <header className="create-food-header">
-                    <h1 className="create-food-title">Create Food</h1>
-                    <p className="create-food-subtitle">Upload a short video, give it a name, and add a description.</p>
+                    <div className="create-food-header-content">
+                        <div>
+                            <h1 className="create-food-title">Create Food</h1>
+                            <p className="create-food-subtitle">Upload a short video, give it a name, and add a description.</p>
+                        </div>
+                        <button 
+                            onClick={handleLogout} 
+                            className="create-food-logout-btn"
+                            aria-label="Logout"
+                            type="button"
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                <polyline points="16 17 21 12 16 7"/>
+                                <line x1="21" y1="12" x2="9" y2="12"/>
+                            </svg>
+                            <span>Logout</span>
+                        </button>
+                    </div>
                 </header>
+
+                {successMessage && (
+                    <div className="success-message" role="alert">
+                        {successMessage}
+                    </div>
+                )}
 
                 <form className="create-food-form" onSubmit={onSubmit}>
                     <div className="field-group">

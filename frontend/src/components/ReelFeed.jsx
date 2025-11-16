@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 // Reusable feed for vertical reels
@@ -9,6 +9,9 @@ import { Link } from 'react-router-dom'
 // - emptyMessage: string
 const ReelFeed = ({ items = [], onLike, onSave, emptyMessage = 'No videos yet.' }) => {
   const videoRefs = useRef(new Map())
+  const [mutedStates, setMutedStates] = useState(new Map())
+  const [showMuteIcon, setShowMuteIcon] = useState(new Map())
+  const muteIconTimeoutRef = useRef(new Map())
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -30,6 +33,67 @@ const ReelFeed = ({ items = [], onLike, onSave, emptyMessage = 'No videos yet.' 
     return () => observer.disconnect()
   }, [items])
 
+  // Initialize muted state for new items (default: unmuted)
+  useEffect(() => {
+    setMutedStates((prev) => {
+      const next = new Map(prev)
+      items.forEach((item) => {
+        if (!next.has(item._id)) {
+          next.set(item._id, false) // false = unmuted
+        }
+      })
+      return next
+    })
+  }, [items])
+
+  const toggleMute = (itemId) => {
+    const video = videoRefs.current.get(itemId)
+    if (!video) return
+
+    const currentMuted = mutedStates.get(itemId) ?? false
+    const newMuted = !currentMuted
+    
+    video.muted = newMuted
+    
+    setMutedStates((prev) => {
+      const next = new Map(prev)
+      next.set(itemId, newMuted)
+      return next
+    })
+
+    // Show icon overlay
+    setShowMuteIcon((prev) => {
+      const next = new Map(prev)
+      next.set(itemId, true)
+      return next
+    })
+
+    // Clear existing timeout for this video
+    const existingTimeout = muteIconTimeoutRef.current.get(itemId)
+    if (existingTimeout) {
+      clearTimeout(existingTimeout)
+    }
+
+    // Hide icon after 2 seconds
+    const timeout = setTimeout(() => {
+      setShowMuteIcon((prev) => {
+        const next = new Map(prev)
+        next.set(itemId, false)
+        return next
+      })
+      muteIconTimeoutRef.current.delete(itemId)
+    }, 2000)
+
+    muteIconTimeoutRef.current.set(itemId, timeout)
+  }
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      muteIconTimeoutRef.current.forEach((timeout) => clearTimeout(timeout))
+    }
+  }, [])
+
   const setVideoRef = (id) => (el) => {
     if (!el) { videoRefs.current.delete(id); return }
     videoRefs.current.set(id, el)
@@ -44,21 +108,54 @@ const ReelFeed = ({ items = [], onLike, onSave, emptyMessage = 'No videos yet.' 
           </div>
         )}
 
-        {items.map((item) => (
+        {items.map((item) => {
+          const isMuted = mutedStates.get(item._id) ?? false
+          const showIcon = showMuteIcon.get(item._id) ?? false
+          
+          return (
           <section key={item._id} className="reel" role="listitem">
             <video
               ref={setVideoRef(item._id)}
               className="reel-video"
               src={item.video}
-              muted
+              muted={isMuted}
               playsInline
               loop
               preload="metadata"
+              style={{ cursor: 'pointer' }}
             />
+            
+            {showIcon && (
+              <div className="reel-mute-icon-overlay">
+                {isMuted ? (
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.5 17.5L2.5 2.5"/>
+                    <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/>
+                    <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"/>
+                    <line x1="2" y1="2" x2="22" y2="22"/>
+                  </svg>
+                ) : (
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                    <line x1="23" y1="9" x2="17" y2="15"/>
+                    <line x1="17" y1="9" x2="23" y2="15"/>
+                  </svg>
+                )}
+              </div>
+            )}
 
-            <div className="reel-overlay">
+            <div 
+              className="reel-overlay"
+              onClick={(e) => {
+                // Only toggle mute if clicking on the overlay itself, not on buttons
+                if (e.target === e.currentTarget || e.target.closest('.reel-overlay-gradient')) {
+                  toggleMute(item._id)
+                }
+              }}
+            >
               <div className="reel-overlay-gradient" aria-hidden="true" />
-              <div className="reel-actions">
+              <div className="reel-actions" onClick={(e) => e.stopPropagation()}>
                 <div className="reel-action-group">
                   <button
                     onClick={onLike ? () => onLike(item) : undefined}
@@ -95,7 +192,7 @@ const ReelFeed = ({ items = [], onLike, onSave, emptyMessage = 'No videos yet.' 
                 </div>
               </div>
 
-              <div className="reel-content">
+              <div className="reel-content" onClick={(e) => e.stopPropagation()}>
                 <p className="reel-description" title={item.description}>{item.description}</p>
                 {item.foodPartner && (
                   <Link className="reel-btn" to={"/food-partner/" + item.foodPartner} aria-label="Visit store">Visit store</Link>
@@ -103,7 +200,8 @@ const ReelFeed = ({ items = [], onLike, onSave, emptyMessage = 'No videos yet.' 
               </div>
             </div>
           </section>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

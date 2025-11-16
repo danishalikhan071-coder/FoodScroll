@@ -18,7 +18,6 @@ const FoodPartnerLogin = () => {
       password
     }, { withCredentials: true })
     .then((response) => {
-      console.log(response.data);
        navigate("/create-food"); // Redirect to create food page after login
     }).catch((error)=>{
       console.error("There was an error when signingIn:",error)

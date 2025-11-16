@@ -18,7 +18,7 @@
   margin: 0 auto;
   height: 100%;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
 }
 
 .bottom-nav__item {
@@ -32,6 +32,18 @@
 }
 
 .bottom-nav__item.is-active { color: var(--color-text); }
+
+.bottom-nav__button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+
+.bottom-nav__button:hover {
+  color: var(--color-text);
+}
 
 .bottom-nav__icon { line-height: 0; }
 

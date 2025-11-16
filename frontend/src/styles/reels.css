@@ -43,7 +43,8 @@
   inset: 0;
   display: flex;
   align-items: flex-end; /* content near bottom */
-  pointer-events: none; /* allow click-through except controls */
+  pointer-events: auto; /* enable clicks for mute toggle */
+  cursor: pointer;
 }
 
 /* Subtle top-to-bottom gradient so text is readable on any video */
@@ -149,4 +150,48 @@
 
 .empty-state{
   position: absolute; inset: 0; display: grid; place-items: center; color: #fff;
+}
+
+/* Mute/Unmute icon overlay */
+.reel-mute-icon-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  pointer-events: none;
+  animation: fadeInOut 2s ease-in-out;
+  display: grid;
+  place-items: center;
+  width: 80px;
+  height: 80px;
+  background: color-mix(in srgb, #000 50%, transparent);
+  backdrop-filter: blur(8px);
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.reel-mute-icon-overlay svg {
+  color: #fff;
+  width: 48px;
+  height: 48px;
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  85% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
 }
