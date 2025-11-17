@@ -9,45 +9,32 @@ const foodPartnerRoutes = require('./routes/food-partner.routes')
 const cors = require('cors')
 
 
-app.use(cors({ // BE ko FE server se data sharing krne ke liye
-    origin: (origin, callback) => {
-        // Get allowed origins from environment variable (can be comma-separated)
-        const envOrigins = process.env.CLIENT_URL 
-            ? process.env.CLIENT_URL.split(',').map(url => url.trim())
-            : [];
-        
-        // Default allowed origins for development
-        const defaultOrigins = [
-            "http://localhost:5173",
-            "http://localhost:3000",
-            "http://127.0.0.1:5173"
-        ];
-        
-        // Combine environment and default origins
-        const allowedOrigins = [...envOrigins, ...defaultOrigins];
-        
-        // Normalize origins (remove trailing slashes and protocol variations for comparison)
-        const normalizeOrigin = (url) => {
-            if (!url) return url;
-            return url.replace(/\/$/, '').toLowerCase();
-        };
-        
-        const normalizedOrigin = normalizeOrigin(origin);
-        
-        // Check if origin is allowed
-        const isAllowed = allowedOrigins.some(allowed => 
-            normalizeOrigin(allowed) === normalizedOrigin
-        );
-        
-        // Allow requests with no origin (like mobile apps or Postman)
-        if (isAllowed || !origin) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    credentials: true
-}))
+const allowedOrigins = [
+  process.env.CLIENT_URL, 
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://127.0.0.1:5173"
+].map(o => o?.replace(/\/$/, '')).filter(Boolean);
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true); // mobile/postman/etc allowed
+
+    const normalizedOrigin = origin.replace(/\/$/, '').toLowerCase();
+
+    if (allowedOrigins.includes(normalizedOrigin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
+}));
+
+app.options("*", cors()); // <-- MOST IMPORTANT
+
 app.use(express.json())
 app.use(cookieParser())
 app.use(express.urlencoded({extended: true}))
